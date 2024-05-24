@@ -4,15 +4,9 @@ const bcrypt = require("bcrypt");
 const sendmail = require("../utilities/nodemailer");
 const companyModel = require("../models/CompanySchema");
 module.exports = {
-  userSignupGet: (req, res) => {
-    try {
-      res.status(200).json("users signup");
-    } catch (err) {
-      console.log("userSignupGet error:", err);
-    }
-  },
   userSignupPost: async (req, res) => {
     try {
+      console.log(req.body);
       const { name, Companyname, email, phone, password, ConfirmPassword } =
         req.body;
       //user deails save
@@ -48,8 +42,10 @@ module.exports = {
           });
           await newUser.save();
           const generateOTP = Math.floor(1000 + Math.random() * 9000);
+          req.session.otp = generateOTP;
+          req.session.email = email;
           await sendmail(email, generateOTP);
-          res.status(200).json("company  signupsuccessfully and otp send ");
+          res.status(200).json("user  signupsuccessfully and otp send ");
         }
       } else {
         // comapny details save
@@ -84,12 +80,47 @@ module.exports = {
           });
           await newCompany.save();
           const generateOTP = Math.floor(1000 + Math.random() * 9000);
+          req.session.otp = generateOTP;
+          req.session.email = email;
           await sendmail(email, generateOTP);
-          res.status(200).json("user signupsuccessfully and otp send ");
+          res.status(200).json("company  signupsuccessfully and otp send ");
         }
       }
     } catch (err) {
       console.log("userSignupPost err:", err);
+    }
+  },
+  //otp verification
+  OtpPost: async (req, res) => {
+    try {
+      const { otp1, otp2, otp3, otp4 } = req.body;
+
+      let Enteropt = Number(otp1 + otp2 + otp3 + otp4); // 4 inputs are join
+      let sendOtp = req.session.otp;
+      let email = req.session.email;
+  
+      if (Enteropt == sendOtp) {
+        const exisistCompany = await companyModel.updateOne({ email: email });
+        const exisistuser =await UsersModel.updateOne({ email: email });
+        console.log(exisistuser)
+        if (exisistCompany) {
+          await companyModel.updateOne(
+            { email: email },
+            { $set: { isVerified: true } }
+          );
+          return res.status(200).json("otp verified");
+        } else if (exisistuser) {
+          await UsersModel.updateOne(
+            { email: email },
+            { $set: { isVerified: true } }
+          );
+          return res.status(200).json("otp verified");
+        }
+      } else {
+        return res.status(400).json("incorrect otp");
+      }
+    } catch (err) {
+      console.log(err);
     }
   },
 };
