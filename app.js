@@ -4,10 +4,11 @@ const dotenv =require('dotenv')
 dotenv.config();
 const dbConnection =require('./config/dbConnection')
 const port = process.env.PORT||3000
+const userRouter = require('./routers/userRouter')
 
-app.get('/',(req,res)=>{
-    res.send('hello')
-})
+app.use(express.urlencoded({extended:true}))
+app.use(express.json())
+app.use('/',userRouter)
 
 dbConnection().then(()=>{
     app.listen(port,()=>{
