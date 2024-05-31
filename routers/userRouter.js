@@ -5,5 +5,7 @@ const userController =require('../controllers/UserController');
 
 
 router.post('/signup',userController.userSignupPost);
-router.post('/otp',userController.OtpPost)
+router.post('/otpsignup',userController.OtpPost)
+router.post('/companydocuments',userController.companyDocumentsPost)
+
 module.exports =router;

@@ -5,6 +5,7 @@ const companySchema =  new mongoose.Schema({
     email: { type: String, require: true },
     password: { type: String, require: true },
     isVerified: { type: Boolean, default: false },
+    adminVerification: { type: Boolean, default: false }
 },{timestamps:true});
 
 const companyModel =mongoose.model('companys',companySchema)

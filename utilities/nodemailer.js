@@ -77,6 +77,7 @@ const sendMail = async (email, otp) => {
     };
 
     await transporter.sendMail(mailOption);
+    console.log('mail send successfully')
   } catch (error) {
     console.log(error.message);
   }

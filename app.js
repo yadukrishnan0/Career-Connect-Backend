@@ -1,25 +1,52 @@
-const express =require('express');
-const  app =express()
-const session = require('express-session')
-const dotenv =require('dotenv')
+const express = require('express');
+const session = require('express-session');
+const dotenv = require('dotenv');
+const cors = require('cors');
+const dbConnection = require('./config/dbConnection');
+const userRouter = require('./routers/userRouter');
+const adminRouter =require('./routers/adminRouter');
+const Cron =require('./services/croneServices')
+// Load environment variables
 dotenv.config();
-const dbConnection =require('./config/dbConnection')
-const port = process.env.PORT||3000
-const userRouter = require('./routers/userRouter')
 
-app.use(express.urlencoded({extended:true}))
-app.use(express.urlencoded({extended:true}))
-app.use(express.json())
+const app = express();
+const port = process.env.PORT || 3000;
 
+// Middleware to parse JSON and URL-encoded data
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Configure CORS
+const corsOptions = {
+    origin: 'http://localhost:5173',
+    credentials:true
+
+};
+app.use(cors(corsOptions ));
+
+// Session middleware
 app.use(session({
     secret: process.env.SECRET,
-    resave: true,
-    saveUninitialized: false
-}))
-app.use('/',userRouter)
+    resave: false,
+    saveUninitialized: true,
+    cookie:{secure:false}
+}));
 
-dbConnection().then(()=>{
-    app.listen(port,()=>{
-        console.log(`server running ${port}`)
-    })
-})
+// Routes
+app.use('/', userRouter);//userRouter
+app.use('/',adminRouter);//admin router
+
+Cron.init();
+
+app.use((err,req,res,next)=>{
+    console.log(err)
+    res.status(500).json({success:false,message:'internal server error'})
+});
+// Connect to the database and start the server
+dbConnection().then(() => {
+    app.listen(port, () => {
+        console.log(`Server running on port ${port}`);
+    });
+}).catch(err => {
+    console.error('Failed to connect to the database', err);
+});
