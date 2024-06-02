@@ -8,7 +8,7 @@ const usersModel = require("../models/UserSchema");
 
 module.exports = {
   //user and company is registration
-  userSignupPost: async (req, res,next) => {
+  userSignupPost: async (req, res, next) => {
     try {
       const { name, Companyname, email, phone, password, ConfirmPassword } =
         req.body;
@@ -42,7 +42,7 @@ module.exports = {
             name,
             phone,
             email,
-             hashedPassword,
+            password:hashedPassword,
           });
           await newUser.save();
           const generateOTP = Math.floor(1000 + Math.random() * 9000);
@@ -50,7 +50,7 @@ module.exports = {
           req.session.email = email;
           await sendmail(email, generateOTP);
 
-          res.status(200).json({
+          res.status(201).json({
             success: true,
             messsage: "user  signupsuccessfully and otp send ",
             role: "employee",
@@ -94,7 +94,7 @@ module.exports = {
           req.session.email = email;
 
           await sendmail(email, generateOTP);
-          res.status(200).json({
+          res.status(201).json({
             success: true,
             msg: "company  signupsuccessfully and otp send ",
             role: "company",
@@ -102,11 +102,12 @@ module.exports = {
         }
       }
     } catch (err) {
-      next(err)
+      next(err);
     }
   },
   //otp verification
-  OtpPost: async (req, res,next) => {
+  OtpPost: async (req, res, next) => {
+
     try {
       const { otp1, otp2, otp3, otp4 } = req.body;
 
@@ -123,12 +124,9 @@ module.exports = {
             { email: email },
             { $set: { isVerified: true } } // verifing company and updating isVerified is ture
           );
-          delete req.session.otp;
-          delete req.session.email;
           return res
             .status(200)
-            .json({ success: true, message: "otp verified" ,role:'company' });
-        
+            .json({ success: true, message: "otp verified", role: "company" });
         } else if (exisistuser) {
           await UsersModel.updateOne(
             { email: email },
@@ -137,18 +135,18 @@ module.exports = {
           delete req.session.otp;
           delete req.session.email;
           return res
-          .status(200)
-          .json({ success: true, message: "otp verified" ,role:'employee' });
-           
+            .status(200)
+            .json({ success: true, message: "otp verified", role: "employee" });
         }
       } else {
         return res.status(400).json({ message: "incorrect otp" });
       }
     } catch (err) {
-      next(err)
+      next(err);
     }
   },
-  companyDocumentsPost: async (req, res,next) => {
+  companyDocumentsPost: async (req, res, next) => {
+
     try {
       const { Registration_Number, Gst_Number, Sector, company_address } =
         req.body;
@@ -162,11 +160,13 @@ module.exports = {
         company_address,
       });
       await companyDocuments.save();
+      delete req.session.otp;
+      delete req.session.email;
       res
         .status(200)
         .json({ success: true, message: "companyDocumentsPost is success" });
     } catch (err) {
-      next(err)
+      next(err);
     }
   },
 };

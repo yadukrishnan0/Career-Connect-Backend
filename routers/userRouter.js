@@ -4,8 +4,8 @@ const userController =require('../controllers/UserController');
 
 
 
-router.post('/signup',userController.userSignupPost);
-router.post('/otpsignup',userController.OtpPost)
-router.post('/companydocuments',userController.companyDocumentsPost)
+router.post('/signup',userController.userSignupPost);//user or company signup
+router.post('/otpsignup',userController.OtpPost)//otp verification
+router.post('/companydocuments',userController.companyDocumentsPost)//company  documents sumbition
 
 module.exports =router;

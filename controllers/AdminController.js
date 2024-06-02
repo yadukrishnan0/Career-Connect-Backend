@@ -1,21 +1,23 @@
 const validation = require("../utilities/validation");
 const adminModel = require("../models/AdminSchema");
-
+const bcrypt = require("bcrypt");
+const sendmail = require("../utilities/nodemailer");
 module.exports = {
-  AdminSignuPPost: async (req, res,next) => {
+  AdminSignuPPost: async (req, res, next) => {
+    console.log(req.body);
     try {
+      const { name, email, phone, secretCode, password, ConfirmPassword } =
+        req.body;
+      const adminsecretCode = process.env.SECRET_CODE; // verification code for admin
+      const adminExist = await adminModel.findOne({ email: email });
 
-      const errResonse = (status,data) => {
-        return res.status(status).json({data})
+      // Check if admin already exists
+      if (adminExist) {
+        return res.status(400).json({ message: "User already signed up" });
       }
 
-      const { name, email, phone, secretCode, password } = req.body;
-      const exisistadmin = await adminModel.findOne({ email: email });
-      const adminsecretCode = process.env.SECRET_CODE; //verification code for admin
-      if (exisistadmin) {
-        errResonse(400,)
-        return res.status(400).json({ message: "user already signuped" });
-      } else if (
+      // Validate required fields
+      if (
         !validation.validationFields([
           name,
           email,
@@ -24,31 +26,49 @@ module.exports = {
           ConfirmPassword,
         ])
       ) {
-        return res.status(400).json("please fill the form");
-      } else if (!validation.passwordValidation(password)) {
-        return res.status(400).json("invalid password format");
-      } else if (!validation.emailValidation(email)) {
-        return res.status(400).json("invalid email format");
-      } else if (!validation.ConfirmPassword(password, ConfirmPassword)) {
+        return res.status(400).json({ message: "Please fill the form" });
+      }
+
+      // Validate password
+      if (!validation.passwordValidation(password)) {
+        return res.status(400).json({ message: "Invalid password format" });
+      }
+
+      // Validate email
+      if (!validation.emailValidation(email)) {
+        return res.status(400).json({ message: "Invalid email format" });
+      }
+
+      // Check if password and confirm password match
+      if (!validation.ConfirmPassword(password, ConfirmPassword)) {
         return res
           .status(400)
-          .json("password and confirmpassword is not match");
-      } else if (adminsecretCode == secretCode) {
-        return res.status(400).json("code in incorrect");
-      } else {
-        const newadmin = new adminModel({
-          name,
-          email,
-          phone,
-          password,
-        });
-        await newadmin.save();
-        return res
-          .status(200)
-          .json({ success: true, message: "admin successfully signup" });
+          .json({ message: "Password and confirm password do not match" });
       }
+
+      // Verify admin secret code
+      if (adminsecretCode !== secretCode) {
+        return res.status(400).json({ message: "Incorrect secret code" });
+      }
+
+      // Create and save new admin
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const newAdmin = new adminModel({
+        name,
+        email,
+        phone,
+        password: hashedPassword,
+      });
+      await newAdmin.save();
+      const generateOTP = Math.floor(1000 + Math.random() * 9000);
+      req.session.adminemail = email;
+      req.session.adminotp = generateOTP;
+      await sendmail(email, generateOTP);
+      return res
+        .status(201)
+        .json({ success: true, message: "Admin successfully signed up" });
     } catch (err) {
-      next(err)
+      next(err);
     }
   },
 };
