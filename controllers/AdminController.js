@@ -4,7 +4,6 @@ const bcrypt = require("bcrypt");
 const sendmail = require("../utilities/nodemailer");
 module.exports = {
   AdminSignuPPost: async (req, res, next) => {
-    console.log(req.body);
     try {
       const { name, email, phone, secretCode, password, ConfirmPassword } =
         req.body;
@@ -71,4 +70,46 @@ module.exports = {
       next(err);
     }
   },
+  adminOtpVerification: async (req, res, next) => {
+    try {
+      // Extract the individual OTP digits from the request body
+      const { otp1, otp2, otp3, otp4 } = req.body;
+             
+      // Combine the 4 OTP digits into a single number
+      let Enteropt = Number(otp1 + otp2 + otp3 + otp4);
+
+      // Retrieve the sent OTP and admin email from the session
+      const sendOtp = req.session.adminotp;
+      const email = req.session.adminemail;
+
+      // Check if the entered OTP matches the sent OTP
+      if (Enteropt == sendOtp) {
+        // Find the admin with the given email
+        const exisistAdmin = await adminModel.findOne({ email: email });
+
+        // If the admin exists, update the 'isVerified' status to true
+        if (exisistAdmin) {
+          await adminModel.updateOne(
+            { email: email },
+            { $set: { isVerified: true } }
+          );
+          // Respond with success message if OTP is verified
+          return res.status(200).json({ success: true, message: "otp verified" });
+        }
+      } else {
+        // Respond with an error message if OTP is incorrect
+        return res.status(400).json({ success: false, message: "incorrect otp" });
+      }
+    } catch (err) {
+      // Pass any errors to the next middleware
+      next(err);
+    }
+  },
+  Adminlogin:async(req,res,next)=>{
+    try{
+    const{email,password} =req.body;
+    }catch(err){
+       next(err)
+    }
+  }
 };
