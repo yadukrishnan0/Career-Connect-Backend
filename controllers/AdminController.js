@@ -2,6 +2,7 @@ const validation = require("../utilities/validation");
 const adminModel = require("../models/AdminSchema");
 const bcrypt = require("bcrypt");
 const sendmail = require("../utilities/nodemailer");
+const companyDocumentsModel = require("../models/companyRegistrationSchema");
 module.exports = {
   AdminSignuPPost: async (req, res, next) => {
     try {
@@ -74,7 +75,7 @@ module.exports = {
     try {
       // Extract the individual OTP digits from the request body
       const { otp1, otp2, otp3, otp4 } = req.body;
-             
+
       // Combine the 4 OTP digits into a single number
       let Enteropt = Number(otp1 + otp2 + otp3 + otp4);
 
@@ -94,22 +95,51 @@ module.exports = {
             { $set: { isVerified: true } }
           );
           // Respond with success message if OTP is verified
-          return res.status(200).json({ success: true, message: "otp verified" });
+          return res
+            .status(200)
+            .json({ success: true, message: "otp verified" });
         }
       } else {
         // Respond with an error message if OTP is incorrect
-        return res.status(400).json({ success: false, message: "incorrect otp" });
+        return res
+          .status(400)
+          .json({ success: false, message: "incorrect otp" });
       }
     } catch (err) {
       // Pass any errors to the next middleware
       next(err);
     }
   },
-  Adminlogin:async(req,res,next)=>{
-    try{
-    const{email,password} =req.body;
-    }catch(err){
-       next(err)
+  Adminlogin: async (req, res, next) => {
+    try {
+      const { email, password } = req.body;
+      const accExist = await adminModel.findOne({ email: email });
+      const passmatch = await bcrypt.compare(password, accExist.password);
+      if (!accExist) {
+        return res
+          .status(400)
+          .json({ success: false, message: "please create account" });
+      }
+      if (accExist && !passmatch) {
+        return res
+          .status(400)
+          .json({ success: false, message: "incorrect password" });
+      }
+      if (accExist && passmatch) {
+      }
+    } catch (err) {
+      next(err);
     }
-  }
+  },
+  companyVerification: async (req, res, next) => {
+    try {
+      const companyDatas = await companyDocumentsModel.find({}).populate({
+        path: 'companyId',
+        select: '-password' // Exclude the password field
+      });
+      res.status(200).json({ success: true, companyDatas: companyDatas });
+    } catch (err) {
+      next(err);
+    }
+  },
 };

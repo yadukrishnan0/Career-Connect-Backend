@@ -24,6 +24,7 @@ const corsOptions = {
 };
 app.use(cors(corsOptions ));
 
+app.use(express.static('public'));
 // Session middleware
 app.use(session({
     secret: process.env.SECRET,

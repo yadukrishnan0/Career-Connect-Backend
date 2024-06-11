@@ -146,10 +146,10 @@ module.exports = {
     }
   },
   companyDocumentsPost: async (req, res, next) => {
-
     try {
-      const { Registration_Number, Gst_Number, Sector, company_address } =
-        req.body;
+      const body =Object.assign({},req.body);
+      const { Registration_Number, Gst_Number, Sector,  state,district, pincode } =body;
+      const companylogo =req.file.filename;
       const email = req.session.email;
       const company = await companyModel.findOne({ email: email });
       const companyDocuments = new companyDocumentsModel({
@@ -157,7 +157,10 @@ module.exports = {
         Registration_Number,
         Gst_Number,
         Sector,
-        company_address,
+        state,
+        district,
+        pincode,
+        companylogo
       });
       await companyDocuments.save();
       delete req.session.otp;
