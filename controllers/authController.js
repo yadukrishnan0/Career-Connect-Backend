@@ -1,10 +1,11 @@
 const UsersModel = require("../models/UserSchema");
+const jwt =require('jsonwebtoken')
 const companyDocumentsModel = require("../models/companyRegistrationSchema");
 const validation = require("../utilities/validation"); //validation for signup
 const bcrypt = require("bcrypt");
 const sendmail = require("../utilities/nodemailer");
 const companyModel = require("../models/CompanySchema");
-const usersModel = require("../models/UserSchema");
+
 
 module.exports = {
   //user and company is registration
@@ -42,7 +43,7 @@ module.exports = {
             name,
             phone,
             email,
-            password:hashedPassword,
+            password: hashedPassword,
           });
           await newUser.save();
           const generateOTP = Math.floor(1000 + Math.random() * 9000);
@@ -107,7 +108,6 @@ module.exports = {
   },
   //otp verification
   OtpPost: async (req, res, next) => {
-
     try {
       const { otp1, otp2, otp3, otp4 } = req.body;
 
@@ -147,9 +147,16 @@ module.exports = {
   },
   companyDocumentsPost: async (req, res, next) => {
     try {
-      const body =Object.assign({},req.body);
-      const { Registration_Number, Gst_Number, Sector,  state,district, pincode } =body;
-      const companylogo =req.file.filename;
+      const body = Object.assign({}, req.body);
+      const {
+        Registration_Number,
+        Gst_Number,
+        Sector,
+        state,
+        district,
+        pincode,
+      } = body;
+      const companylogo = req.file.filename;
       const email = req.session.email;
       const company = await companyModel.findOne({ email: email });
       const companyDocuments = new companyDocumentsModel({
@@ -160,7 +167,7 @@ module.exports = {
         state,
         district,
         pincode,
-        companylogo
+        companylogo,
       });
       await companyDocuments.save();
       delete req.session.otp;
@@ -170,6 +177,37 @@ module.exports = {
         .json({ success: true, message: "companyDocumentsPost is success" });
     } catch (err) {
       next(err);
+    }
+  },
+  loginPost: async (req, res, next) => {
+    try {
+      const {email, password} = req.body;
+      const existingCompany = await companyModel.findOne({email:email});
+      const existingUser = await UsersModel.findOne({email:email });
+   
+      if (!existingUser && !existingCompany) {
+        return res.status(400).json({ success: false, message: "Please create an account" });
+      }
+
+      const userToCheck = existingCompany || existingUser;
+      const role = existingCompany ? "company" : "employee";
+      const passMatch = await bcrypt.compare(password, userToCheck.password);
+      if (!passMatch) {
+        return res.status(400).json({ success: false, message: "Incorrect password" });
+      }
+      if(!userToCheck.isVerified && passMatch ){
+        return res.status(400).json({ success: false, message: "otp not verified"});
+      } 
+      const payload = {
+        userId: userToCheck._id,
+        userName: userToCheck.userName,
+        role: role,
+      };
+
+      const token = jwt.sign(payload, process.env.JWT_SECRET);
+      res.status(200).json({ success: true, message: "Login successful", token });
+    } catch (error) {
+      next(error);
     }
   },
 };
