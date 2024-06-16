@@ -3,9 +3,11 @@ const session = require('express-session');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const dbConnection = require('./config/dbConnection');
-const userRouter = require('./routers/userRouter');
+const authRouter = require('./routers/authRouter');
 const adminRouter =require('./routers/adminRouter');
-const Cron =require('./services/croneServices')
+const companyRouter =require('./routers/companyRouter')
+const Cron =require('./services/croneServices');
+
 // Load environment variables
 dotenv.config();
 
@@ -34,8 +36,9 @@ app.use(session({
 }));
 
 // Routes
-app.use('/', userRouter);//userRouter
+app.use('/', authRouter);//authentication router
 app.use('/',adminRouter);//admin router
+app.use('/',companyRouter);
 
 Cron.init();
 

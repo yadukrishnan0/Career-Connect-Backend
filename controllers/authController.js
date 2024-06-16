@@ -188,14 +188,14 @@ module.exports = {
       if (!existingUser && !existingCompany) {
         return res.status(400).json({ success: false, message: "Please create an account" });
       }
-
       const userToCheck = existingCompany || existingUser;
       const role = existingCompany ? "company" : "employee";
       const passMatch = await bcrypt.compare(password, userToCheck.password);
       if (!passMatch) {
         return res.status(400).json({ success: false, message: "Incorrect password" });
       }
-      if(!userToCheck.isVerified && passMatch ){
+      if(!userToCheck.isVerified && passMatch )//opt verification check
+        {
         return res.status(400).json({ success: false, message: "otp not verified"});
       } 
       const payload = {
@@ -203,9 +203,8 @@ module.exports = {
         userName: userToCheck.userName,
         role: role,
       };
-
-      const token = jwt.sign(payload, process.env.JWT_SECRET);
-      res.status(200).json({ success: true, message: "Login successful", token });
+    const token = jwt.sign(payload, process.env.JWT_SECRET); // create a jwt token
+    res.status(200).json({ success: true, message: "Login successful", token ,role});
     } catch (error) {
       next(error);
     }

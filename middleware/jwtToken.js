@@ -14,7 +14,7 @@ const verifyToken = async (req, res, next) => {
 
     try {
       const verified = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = verified; // assuming you want to store the verified user info in req.user
+      req.user = verified; // Assuming the token contains user info
       next();
     } catch (error) {
       console.log("Invalid token", error);
