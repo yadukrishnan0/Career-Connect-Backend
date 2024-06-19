@@ -5,7 +5,8 @@ const cors = require('cors');
 const dbConnection = require('./config/dbConnection');
 const authRouter = require('./routers/authRouter');
 const adminRouter =require('./routers/adminRouter');
-const companyRouter =require('./routers/companyRouter')
+const companyRouter =require('./routers/companyRouter');
+const userRouter =require('./routers/userRouter');
 const Cron =require('./services/croneServices');
 
 // Load environment variables
@@ -38,7 +39,8 @@ app.use(session({
 // Routes
 app.use('/', authRouter);//authentication router
 app.use('/',adminRouter);//admin router
-app.use('/',companyRouter);
+app.use('/',companyRouter);//company router
+app.use('/',userRouter)//user router
 
 Cron.init();
 

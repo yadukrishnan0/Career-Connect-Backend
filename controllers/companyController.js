@@ -9,7 +9,7 @@ module.exports = {
             const newJob = new jobModel(req.body);
              // Validate and save the new job
              await newJob.save();
-            res.status(201).json({message: 'Job posted successfully',job: newJob});
+            res.status(201).json({success:true,message: 'Job posted successfully'});
         } catch (error) {
           next(error)
         }

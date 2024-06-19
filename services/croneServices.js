@@ -15,3 +15,5 @@ const init =()=>{
     Cron.schedule('0 0 * * *',task,{timezone:"UTC"})
 }
 module.exports ={init}
+
+

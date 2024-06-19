@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const jobShema = mongoose.Schema({
-  companyId: { type: String, required: true },
+  companyId: { type: mongoose.Types.ObjectId, ref: "companys" },
   jobTitle: { type: String, required: true },
   tags: { type: String, required: true },
   jobrole: { type: String, required: true },
@@ -13,6 +13,7 @@ const jobShema = mongoose.Schema({
   Works_Space_Type: { type: String, required: true },
   Vacancies: { type: String, required: true },
   date: { type: String, required: true },
+  Active:{type:Boolean,default:true}
 });
 const jobModel = mongoose.model('jobs',jobShema);
 module.exports =jobModel;
