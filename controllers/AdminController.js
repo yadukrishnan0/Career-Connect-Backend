@@ -3,7 +3,8 @@ const adminModel = require("../models/AdminSchema");
 const bcrypt = require("bcrypt");
 const sendmail = require("../utilities/nodemailer");
 const companyDocumentsModel = require("../models/companyRegistrationSchema");
-const companyModel =require('../models/CompanySchema')
+const companyModel = require("../models/CompanySchema");
+const verificationMail =require('../utilities/verificationMail')
 module.exports = {
   AdminSignuPPost: async (req, res, next) => {
     try {
@@ -135,35 +136,26 @@ module.exports = {
   companyVerificationGet: async (req, res, next) => {
     try {
       const companyDatas = await companyDocumentsModel.find({}).populate({
-        path: 'companyId',
-        select: '-password' // Exclude the password field
+        path: "companyId",
+        select: "-password", // Exclude the password field
       });
       res.status(200).json({ success: true, companyDatas: companyDatas });
     } catch (err) {
       next(err);
     }
   },
-  companyVerification:async(req,res,next)=>{
+  companyVerification: async (req, res, next) => {
     try {
-      const id = req.query.id;
-  
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ success: false, message: 'Invalid company ID' });
-      }
-  
-      const result = await companyModel.updateOne(
+       const id = req.query.id;
+       const result = await companyModel.findOneAndUpdate(
         { _id: id },
-        { $set: { adminVerification: true } }
-      );
-  
-      if (result.nModified === 0) {
-        return res.status(404).json({ success: false, message: 'Company not found or already verified' });
-      }
-  
-      res.status(200).json({ success: true, message: 'Company documents are verified' });
+        { $set: { adminVerification: true } },
+        { new: true } // This option returns the updated document
+    );
+    await verificationMail(result.email)
+      res.status(200).json({ success: true, message: "Company documents are verified" });
     } catch (error) {
       next(error);
     }
-  }
-
+  },
 };

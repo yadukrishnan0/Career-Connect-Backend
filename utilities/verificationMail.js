@@ -1,6 +1,6 @@
 const nodemailer = require("nodemailer");
 
-const sendMail = async (email, otp) => {
+const verificationMail= async (email) => {
   try {
     let transporter = nodemailer.createTransport({
       service: "gmail",
@@ -10,7 +10,7 @@ const sendMail = async (email, otp) => {
       },
     });
 
-    //  Email Template
+    
     const template = `
             <!DOCTYPE html>
             <html lang="en">
@@ -60,8 +60,8 @@ const sendMail = async (email, otp) => {
                     <h1>Welcome to Career-Connect!</h1>
                     <p>Dear User,</p>
                     <p>We are delighted to welcome you to Career-Connect, your new jobportal hub.</p>
-                    <p>To complete your registration, please use the OTP provided below:</p>
-                    <p class="otp">${otp}</p>
+                    <p>Your company verification is successfully.</p>
+                    <p class="otp"> Verified..!</p>
                     <p>If you have any questions or need assistance, feel free to contact us.</p>
                     <p>Best Regards,<br/>The Career-Connect Team</p>
                 </div>
@@ -83,4 +83,4 @@ const sendMail = async (email, otp) => {
   }
 };
 
-module.exports = sendMail;
+module.exports = verificationMail ;

@@ -188,6 +188,11 @@ module.exports = {
       if (!existingUser && !existingCompany) {
         return res.status(400).json({ success: false, message: "Please create an account" });
       }
+    if(!existingCompany.adminVerification){
+      return res.status(400).json({ success: false, message:'admin is not verified' });
+    }
+
+
       const userToCheck = existingCompany || existingUser;
       const role = existingCompany ? "company" : "employee";
       const passMatch = await bcrypt.compare(password, userToCheck.password);
