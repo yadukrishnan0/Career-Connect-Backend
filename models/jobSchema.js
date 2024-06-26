@@ -14,6 +14,7 @@ const jobShema = mongoose.Schema({
   Vacancies: { type: String, required: true },
   date: { type: String, required: true },
   requirements:{type:Array,required:true},
+  skill:{type:Array,required:true},
   Active:{type:Boolean,default:true}
 });
 const jobModel = mongoose.model('jobs',jobShema);

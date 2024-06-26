@@ -108,11 +108,11 @@ module.exports = {
   },
   //otp verification
   OtpPost: async (req, res, next) => {
+
     try {
       const { otp1, otp2, otp3, otp4 } = req.body;
 
       let Enteropt = Number(otp1 + otp2 + otp3 + otp4); // 4 inputs are join
-
       const sendOtp = req.session.otp;
       const email = req.session.email;
 
@@ -120,13 +120,7 @@ module.exports = {
         const exisistCompany = await companyModel.findOne({ email: email });
         const exisistuser = await UsersModel.findOne({ email: email });
         if (exisistCompany) {
-          await companyModel.updateOne(
-            { email: email },
-            { $set: { isVerified: true } } // verifing company and updating isVerified is ture
-          );
-          return res
-            .status(200)
-            .json({ success: true, message: "otp verified", role: "company" });
+          return res.status(200).json({ success: true, message: "otp verified", role: "company" });
         } else if (exisistuser) {
           await UsersModel.updateOne(
             { email: email },
@@ -172,9 +166,11 @@ module.exports = {
       await companyDocuments.save();
       delete req.session.otp;
       delete req.session.email;
-      res
-        .status(200)
-        .json({ success: true, message: "companyDocumentsPost is success" });
+      await companyModel.updateOne(
+        { email: email },
+        { $set: { isVerified: true } } // verifing company and updating isVerified is ture
+      );
+      res.status(200).json({ success: true, message: "companyDocumentsPost is success" });
     } catch (err) {
       next(err);
     }
@@ -188,9 +184,7 @@ module.exports = {
       if (!existingUser && !existingCompany) {
         return res.status(400).json({ success: false, message: "Please create an account" });
       }
-    if(!existingCompany.adminVerification){
-      return res.status(400).json({ success: false, message:'admin is not verified' });
-    }
+    
 
 
       const userToCheck = existingCompany || existingUser;
@@ -199,16 +193,29 @@ module.exports = {
       if (!passMatch) {
         return res.status(400).json({ success: false, message: "Incorrect password" });
       }
-      if(!userToCheck.isVerified && passMatch )//opt verification check
-        {
-        return res.status(400).json({ success: false, message: "otp not verified"});
-      } 
+
       const payload = {
         userId: userToCheck._id,
         userName: userToCheck.userName,
         role: role,
       };
-    const token = jwt.sign(payload, process.env.JWT_SECRET); // create a jwt token
+
+      if(!userToCheck.isVerified && passMatch )//opt verification check
+        {
+  
+          req.session.email =userToCheck.email;
+          const generateOTP = Math.floor(1000 + Math.random() * 9000);
+          req.session.otp = generateOTP;
+          await sendmail(email, generateOTP);
+        return res.status(200).json({ success:true, message: "otp not verified" ,otp:false});
+      }
+      
+      if(existingCompany && !existingCompany.adminVerification){
+        return res.status(400).json({ success: false, message:'admin is not verified' });
+      }
+      
+    const token = jwt.sign(payload, process.env.JWT_SECRET); 
+    // create a jwt token
     res.status(200).json({ success: true, message: "Login successful", token ,role});
     } catch (error) {
       next(error);
