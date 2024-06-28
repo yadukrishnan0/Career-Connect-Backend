@@ -4,8 +4,7 @@ const companyDocumentsModel = require("../models/companyRegistrationSchema");
 const userProfileModel = require("../models/userProfileSchema");
 const usersModel = require("../models/UserSchema");
 const applicationModel = require("../models/applicationModel");
-const { json } = require("express");
-const { JsonWebTokenError } = require("jsonwebtoken");
+const applyjobModel = require("../models/applyJobs");
 module.exports = {
   homeGet: async (req, res, next) => {
     try {
@@ -96,24 +95,60 @@ module.exports = {
       const jobId = JSON.parse(req.body.jobId);
       const Resume = req.file.filename;
       const jobdata = await jobModel.findOne({ _id: jobId });
-
-      const newApplication = new applicationModel({
-        companyId: jobdata.companyId,
-        jobId: jobId,
-        applications: [
+      const applyJob = await applyjobModel.findOne({ userId: userId });
+      const applictionJOb = await applicationModel.findOne({ jobId: jobId });
+      if (!applictionJOb) {
+        const newApplication = new applicationModel({
+          companyId: jobdata.companyId,
+          jobId: jobId,
+          applications: [
+            {
+              userId: userId,
+              education,
+              experience,
+              company,
+              location,
+              skill,
+              language,
+              resume: Resume,
+            },
+          ],
+        });
+        await newApplication.save();
+      } else {
+        await applicationModel.updateOne(
+          { jobId: jobId },
           {
-            userId: userId,
-            education,
-            experience,
-            company,
-            location,
-            skill,
-            language,
-            resume:Resume
-          },
-        ],
-      });
-      await newApplication.save();
-    } catch (err) {}
+            $push: {
+              applications: {
+                userId: userId,
+                education,
+                experience,
+                company,
+                location,
+                skill,
+                language,
+                resume: Resume,
+              },
+            },
+          }
+        );
+      }
+      if (!applyJob) {
+        const newData = await applyjobModel({
+          userId: userId,
+          jobs: [{ jobId: jobId }],
+        });
+        await newData.save();
+      } else {
+        await applyjobModel.updateOne(
+          { userId: userId },
+          { $push: { jobs: { jobId: jobId } } }
+        );
+      }
+      res.status(201).json({ message: "application successfully submit" });
+    } catch (err) {
+      next(err);
+    }
   },
 };
