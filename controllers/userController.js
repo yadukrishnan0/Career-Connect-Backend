@@ -3,6 +3,9 @@ const jobModel = require("../models/jobSchema");
 const companyDocumentsModel = require("../models/companyRegistrationSchema");
 const userProfileModel = require("../models/userProfileSchema");
 const usersModel = require("../models/UserSchema");
+const applicationModel = require("../models/applicationModel");
+const { json } = require("express");
+const { JsonWebTokenError } = require("jsonwebtoken");
 module.exports = {
   homeGet: async (req, res, next) => {
     try {
@@ -40,17 +43,13 @@ module.exports = {
   profileGet: async (req, res, next) => {
     try {
       const { userId } = req.user;
-      const exisitUser =await usersModel.findOne({_id:userId});
-      const profiledata = await userProfileModel.findOne({ userId:userId });
-      res.status(200).json({success:true,profiledata,exisitUser})
+      const exisitUser = await usersModel.findOne({ _id: userId });
+      const profiledata = await userProfileModel.findOne({ userId: userId });
+      res.status(200).json({ success: true, profiledata, exisitUser });
     } catch (err) {
       next(err);
     }
   },
-
-
-
-
 
   profilePost: async (req, res, next) => {
     const { userId } = req.user;
@@ -67,20 +66,54 @@ module.exports = {
         skill,
         language,
       } = req.body;
-      const newProfileData =new userProfileModel({
-        userId:userId,
+      const newProfileData = new userProfileModel({
+        userId: userId,
         education,
         experience,
         company,
         location,
         dob,
         skill,
-        language
-      })
+        language,
+      });
       await newProfileData.save();
-      res.status(201).json({success:true,message:'profile created succcess'})
+      res
+        .status(201)
+        .json({ success: true, message: "profile created succcess" });
     } catch (err) {
       console.log(err);
     }
+  },
+  applicationPost: async (req, res, next) => {
+    try {
+      const { userId } = req.user;
+      const education = JSON.parse(req.body.education);
+      const experience = JSON.parse(req.body.experience);
+      const company = JSON.parse(req.body.company);
+      const skill = JSON.parse(req.body.skill);
+      const language = JSON.parse(req.body.language);
+      const location = JSON.parse(req.body.location);
+      const jobId = JSON.parse(req.body.jobId);
+      const Resume = req.file.filename;
+      const jobdata = await jobModel.findOne({ _id: jobId });
+
+      const newApplication = new applicationModel({
+        companyId: jobdata.companyId,
+        jobId: jobId,
+        applications: [
+          {
+            userId: userId,
+            education,
+            experience,
+            company,
+            location,
+            skill,
+            language,
+            resume:Resume
+          },
+        ],
+      });
+      await newApplication.save();
+    } catch (err) {}
   },
 };

@@ -38,7 +38,7 @@ app.use(session({
 
 // Routes
 app.use('/', authRouter);//authentication router
-app.use('/',adminRouter);//admin router
+app.use('/admin',adminRouter);//admin router
 app.use('/',companyRouter);//company router
 app.use('/',userRouter)//user router
 
