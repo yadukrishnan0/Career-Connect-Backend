@@ -39,7 +39,7 @@ app.use(session({
 // Routes
 app.use('/', authRouter);//authentication router
 app.use('/admin',adminRouter);//admin router
-app.use('/',companyRouter);//company router
+app.use('/company',companyRouter);//company router
 app.use('/',userRouter)//user router
 
 Cron.init();
