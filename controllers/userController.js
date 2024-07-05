@@ -212,11 +212,23 @@ module.exports = {
   updateSkill: async (req, res, next) => {
     try {
       const { userId } = req.user;
+      const userProfile = await userProfileModel.findOne({ userId: userId });
+      const skillExists = userProfile.skill.some(
+        (s) => s.skill === req.body.skill
+      ); //to check the skill already exisit..!
+
+      if (skillExists) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Skill already exists" });
+      }
+
       await userProfileModel.updateOne(
         { userId: userId },
-        { $push: { skill: { skill: req.body.skill } } }
+        { $addToSet: { skill: { skill: req.body.skill } } }
       );
-      res.status(200).json({ success: true, message: "skill update success" });
+
+      res.status(200).json({ success: true, message: "Skill update success" });
     } catch (error) {
       next(error);
     }
