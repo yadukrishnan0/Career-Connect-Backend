@@ -12,5 +12,8 @@ router.get('/jobdetail',userController.jobDetails);
 router.get('/profile',verifyToken,userController.profileGet)
 router.post('/profile',verifyToken,userController.profilePost)
 
-router.post('/application',verifyToken,upload.single('resume') ,userController.applicationPost)
+router.post('/application',verifyToken,upload.single('resume') ,userController.applicationPost);
+router.get('/myjobs',userController.myjobsGet)//applyed jobs get saved jobs
+router.get('/applyjob',verifyToken,userController.applyedjobsGet);
+router.post('/updateskill',verifyToken, userController.updateSkill)
 module.exports =router;

@@ -12,7 +12,7 @@ const verifyToken = async (req, res, next) => {
       return res.status(401).json({ msg: "Access denied, token is missing" });
     }
 
-    try {
+    try { 
       const verified = jwt.verify(token, process.env.JWT_SECRET);
       req.user = verified; // Assuming the token contains user info
       next();

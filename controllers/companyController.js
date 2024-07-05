@@ -39,13 +39,13 @@ module.exports = {
         next(err)
     }
   },
-  resumeGet:(req, res) => {
-    try {
-      const filePath = path.join(__dirname, '../public/assets', req.query.resume); 
-      res.sendFile(filePath);
-    } catch (err) {
-      console.error('Error sending file:', err);
-      res.status(500).send('Error downloading file');
-    }
-  }
+  // resumeGet:(req, res) => {
+  //   try {
+  //     const filePath = path.join(__dirname, '../public/assets', req.query.resume); 
+  //     res.sendFile(filePath);
+  //   } catch (err) {
+  //     console.error('Error sending file:', err);
+  //     res.status(500).send('Error downloading file');
+  //   }
+  // }
 };

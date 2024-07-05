@@ -31,7 +31,7 @@ module.exports = {
       const jobs = await jobModel.findOne({ _id: id }).populate("companyId");
       const documents = await companyDocumentsModel.findOne({
         companyId: jobs.companyId._id,
-      }); //find company documents
+      });
       const jobsObject = jobs.toObject();
       jobsObject.companyDocuments = documents;
       res.status(200).json({ success: true, jobsObject });
@@ -54,9 +54,6 @@ module.exports = {
     const { userId } = req.user;
     try {
       const {
-        name,
-        email,
-        phone,
         education,
         experience,
         company,
@@ -64,23 +61,38 @@ module.exports = {
         location,
         skill,
         language,
+        institution,
+        jobrole,
       } = req.body;
+      console.log(jobrole);
+      // Creating a new profile instance
       const newProfileData = new userProfileModel({
         userId: userId,
         education,
-        experience,
-        company,
-        location,
+        institution,
+        experience: [
+          {
+            company: company,
+            location: location,
+            experience: experience,
+            jobrole: jobrole,
+          },
+        ],
         dob,
         skill,
         language,
       });
+
       await newProfileData.save();
       res
         .status(201)
-        .json({ success: true, message: "profile created succcess" });
+        .json({ success: true, message: "Profile created successfully" });
     } catch (err) {
       console.log(err);
+      res.status(500).json({
+        success: false,
+        message: "An error occurred while creating the profile",
+      });
     }
   },
   applicationPost: async (req, res, next) => {
@@ -149,6 +161,64 @@ module.exports = {
       res.status(201).json({ message: "application successfully submit" });
     } catch (err) {
       next(err);
+    }
+  },
+  myjobsGet: async (req, res, next) => {
+    const userId = "66750afad91791483f7a0b10";
+    try {
+      const applyJob = await applyjobModel
+        .findOne({ userId })
+        .populate({
+          path: "jobs.jobId",
+          populate: { path: "companyId" },
+        })
+        .exec();
+
+      if (!applyJob) {
+        console.log("No applied job found for this user");
+        return res.status(404).send("No jobs found");
+      }
+
+      const companyDocuments = await companyDocumentsModel.find().exec();
+
+      const jobData = applyJob.jobs.map((job) => {
+        const companyDoc = companyDocuments.find((doc) =>
+          doc.companyId.equals(job.jobId.companyId._id)
+        );
+
+        return {
+          ...job.toObject(),
+          companyDetails: job.jobId.companyId
+            ? job.jobId.companyId.toObject()
+            : null,
+          companyDocuments: companyDoc ? companyDoc.toObject() : null,
+        };
+      });
+      res.status(200).json({ success: true, jobData });
+    } catch (err) {
+      next(err);
+    }
+  },
+  applyedjobsGet: async (req, res, next) => {
+    try {
+      const { userId } = req.user;
+      const myjobData = await applyjobModel.findOne({ userId: userId });
+      return res.status(200).json({ success: true, myjobData });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  updateSkill: async (req, res, next) => {
+    try {
+      const { userId } = req.user;
+      await userProfileModel.updateOne(
+        { userId: userId },
+        { $push: { skill: { skill: req.body.skill } } }
+      );
+      res.status(200).json({ success: true, message: "skill update success" });
+    } catch (error) {
+      next(error);
     }
   },
 };

@@ -6,5 +6,5 @@ const verifyToken = require('../middleware/jwtToken'); // verification jwt token
 router.post('/jobpost',verifyToken,companyController.postJob);
 router.get('/application',verifyToken,companyController.applicationGet);
 router.get('/viewCandidates',companyController.candidateGet);
-router.get('/download',companyController.resumeGet)
+// router.get('/download',companyController.resumeGet)
 module.exports = router;

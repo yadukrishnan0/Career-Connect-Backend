@@ -1,11 +1,10 @@
 const UsersModel = require("../models/UserSchema");
-const jwt =require('jsonwebtoken')
+const jwt = require("jsonwebtoken");
 const companyDocumentsModel = require("../models/companyRegistrationSchema");
 const validation = require("../utilities/validation"); //validation for signup
 const bcrypt = require("bcrypt");
 const sendmail = require("../utilities/nodemailer");
 const companyModel = require("../models/CompanySchema");
-
 
 module.exports = {
   //user and company is registration
@@ -108,7 +107,6 @@ module.exports = {
   },
   //otp verification
   OtpPost: async (req, res, next) => {
-
     try {
       const { otp1, otp2, otp3, otp4 } = req.body;
 
@@ -120,7 +118,9 @@ module.exports = {
         const exisistCompany = await companyModel.findOne({ email: email });
         const exisistuser = await UsersModel.findOne({ email: email });
         if (exisistCompany) {
-          return res.status(200).json({ success: true, message: "otp verified", role: "company" });
+          return res
+            .status(200)
+            .json({ success: true, message: "otp verified", role: "company" });
         } else if (exisistuser) {
           await UsersModel.updateOne(
             { email: email },
@@ -170,28 +170,32 @@ module.exports = {
         { email: email },
         { $set: { isVerified: true } } // verifing company and updating isVerified is ture
       );
-      res.status(200).json({ success: true, message: "companyDocumentsPost is success" });
+      res
+        .status(200)
+        .json({ success: true, message: "companyDocumentsPost is success" });
     } catch (err) {
       next(err);
     }
   },
   loginPost: async (req, res, next) => {
     try {
-      const {email, password} = req.body;
-      const existingCompany = await companyModel.findOne({email:email});
-      const existingUser = await UsersModel.findOne({email:email });
-   
-      if (!existingUser && !existingCompany) {
-        return res.status(400).json({ success: false, message: "Please create an account" });
-      }
-    
+      const { email, password } = req.body;
+      const existingCompany = await companyModel.findOne({ email: email });
+      const existingUser = await UsersModel.findOne({ email: email });
 
+      if (!existingUser && !existingCompany) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Please create an account" });
+      }
 
       const userToCheck = existingCompany || existingUser;
       const role = existingCompany ? "company" : "employee";
       const passMatch = await bcrypt.compare(password, userToCheck.password);
       if (!passMatch) {
-        return res.status(400).json({ success: false, message: "Incorrect password" });
+        return res
+          .status(400)
+          .json({ success: false, message: "Incorrect password" });
       }
 
       const payload = {
@@ -200,23 +204,28 @@ module.exports = {
         role: role,
       };
 
-      if(!userToCheck.isVerified && passMatch )//opt verification check
-        {
-  
-          req.session.email =userToCheck.email;
-          const generateOTP = Math.floor(1000 + Math.random() * 9000);
-          req.session.otp = generateOTP;
-          await sendmail(email, generateOTP);
-        return res.status(200).json({ success:true, message: "otp not verified" ,otp:false});
+      if (!userToCheck.isVerified && passMatch) {
+        //opt verification check
+        req.session.email = userToCheck.email;
+        const generateOTP = Math.floor(1000 + Math.random() * 9000);
+        req.session.otp = generateOTP;
+        await sendmail(email, generateOTP);
+        return res
+          .status(200)
+          .json({ success: true, message: "otp not verified", otp: false });
       }
-      
-      if(existingCompany && !existingCompany.adminVerification){
-        return res.status(400).json({ success: false, message:'admin is not verified' });
+
+      if (existingCompany && !existingCompany.adminVerification) {
+        return res
+          .status(400)
+          .json({ success: false, message: "admin is not verified" });
       }
-      
-    const token = jwt.sign(payload, process.env.JWT_SECRET); 
-    // create a jwt token
-    res.status(200).json({ success: true, message: "Login successful", token ,role});
+
+      const token = jwt.sign(payload, process.env.JWT_SECRET);
+      // create a jwt token
+      res
+        .status(200)
+        .json({ success: true, message: "Login successful", token, role });
     } catch (error) {
       next(error);
     }

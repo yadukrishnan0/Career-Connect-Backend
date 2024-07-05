@@ -5,7 +5,7 @@ const applicationSchema = mongoose.Schema(
     jobId: { type: mongoose.Types.ObjectId, ref: "jobs" },
     applications: [
       {
-        userId: { type: mongoose.Types.ObjectId, ref:"users"},
+        userId: { type: mongoose.Types.ObjectId, ref: "users" },
         education: { type: String, required: true },
         experience: { type: String, required: true },
         company: { type: String, required: true },
@@ -13,8 +13,8 @@ const applicationSchema = mongoose.Schema(
         skill: { type: Array, required: true },
         language: { type: Array, required: true },
         resume: { type: String, required: true },
+        applyDate: { type: Date, default: Date.now },
         shortlist: { type: Boolean, default: false },
-        applyDate:{type:Date,default:Date.now}
       },
     ],
   },
