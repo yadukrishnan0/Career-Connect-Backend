@@ -11,7 +11,9 @@ const userProfileSchema = mongoose.Schema({
         company: { type: String },
         location: { type: String },
         experience: { type: String },
-        jobrole:{type:String}
+        jobrole:{type:String},
+        startdate:{type:String},
+        enddate:{type:String}
       },
     ],
     default: [],

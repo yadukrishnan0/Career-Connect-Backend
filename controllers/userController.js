@@ -44,7 +44,17 @@ module.exports = {
       const { userId } = req.user;
       const exisitUser = await usersModel.findOne({ _id: userId });
       const profiledata = await userProfileModel.findOne({ userId: userId });
-      res.status(200).json({ success: true, profiledata, exisitUser });
+      if (exisitUser && profiledata)
+        return res.status(200).json({
+          success: true,
+          msg: "User have profile",
+          profiledata,
+          exisitUser,
+        });
+      else
+        return res
+          .status(404)
+          .json({ success: false, msg: "profile not exist not exist" });
     } catch (err) {
       next(err);
     }
@@ -52,6 +62,7 @@ module.exports = {
 
   profilePost: async (req, res, next) => {
     const { userId } = req.user;
+    console.log(req.body);
     try {
       const {
         education,
@@ -63,8 +74,10 @@ module.exports = {
         language,
         institution,
         jobrole,
+        startdate,
+        enddate
       } = req.body;
-      console.log(jobrole);
+
       // Creating a new profile instance
       const newProfileData = new userProfileModel({
         userId: userId,
@@ -76,6 +89,8 @@ module.exports = {
             location: location,
             experience: experience,
             jobrole: jobrole,
+            startdate: startdate,
+            enddate: enddate,
           },
         ],
         dob,
@@ -83,10 +98,14 @@ module.exports = {
         language,
       });
 
-      await newProfileData.save();
-      res
-        .status(201)
-        .json({ success: true, message: "Profile created successfully" });
+      const profileDatas = await newProfileData.save();
+      const exisitUser = await usersModel.findOne({ _id: userId });
+      res.status(200).json({
+        success: true,
+        message: "Profile created successfully",
+        profileDatas,
+        exisitUser,
+      });
     } catch (err) {
       console.log(err);
       res.status(500).json({
@@ -210,25 +229,39 @@ module.exports = {
   },
 
   updateSkill: async (req, res, next) => {
+    /// user add new skill   and delete skill
     try {
       const { userId } = req.user;
-      const userProfile = await userProfileModel.findOne({ userId: userId });
-      const skillExists = userProfile.skill.some(
-        (s) => s.skill === req.body.skill
-      ); //to check the skill already exisit..!
+      const skill = req.query.skill;
 
-      if (skillExists) {
+      if (skill) {
+        const updated = await userProfileModel.updateOne(
+          { userId: userId },
+          { $pull: { skill: { skill: skill } } }
+        );
+
         return res
-          .status(400)
-          .json({ success: false, message: "Skill already exists" });
+          .status(200)
+          .json({ success: true, message: "Skill deleted success" });
+      } else {
+        const userProfile = await userProfileModel.findOne({ userId: userId });
+        const skillExists = userProfile.skill.some(
+          (s) => s.skill === req.body.skill
+        ); // to check if the skill already exists
+
+        if (skillExists) {
+          return res
+            .status(400)
+            .json({ success: false, message: "Skill already exists" });
+        }
+
+        await userProfileModel.updateOne(
+          { userId: userId },
+          { $addToSet: { skill: { skill: req.body.skill } } }
+        );
+
+        return res.status(200).json({ message: "Skill update success" });
       }
-
-      await userProfileModel.updateOne(
-        { userId: userId },
-        { $addToSet: { skill: { skill: req.body.skill } } }
-      );
-
-      res.status(200).json({ success: true, message: "Skill update success" });
     } catch (error) {
       next(error);
     }
